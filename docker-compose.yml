@@ -9,5 +9,31 @@ services:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
 
+  airflow:
+    build: .
+    container_name: stock_airflow
+    command: standalone
+    env_file: .env
+    environment:
+      # in reteaua Docker, Airflow ajunge la baza de date prin numele serviciului
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "True"
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: Europe/Bucharest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./src:/opt/airflow/src
+      - ./data:/opt/airflow/data
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
 volumes:
   pgdata:
